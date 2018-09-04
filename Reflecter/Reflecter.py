@@ -80,9 +80,9 @@ def reflect(event):
         #VideoCaptureオブジェクトを取得
         cap = cv2.VideoCapture(0)
         # モデルの読み込み
-        model = model_from_json(open('9733r.json', 'r').read())
+        model = model_from_json(open('9630r.json', 'r').read())
         # 重みの読み込み
-        model.load_weights('9733r.h5')
+        model.load_weights('9630r.h5')
         #c = 2
         c = 2
         #画像認識開始
@@ -154,6 +154,7 @@ def reflect(event):
         #カメラ、ウィンドウを削除
         cap.release()
         cv2.destroyAllWindows()
+        sys.exit()
         print('---END---')
 
 
