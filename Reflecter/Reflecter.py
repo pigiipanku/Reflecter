@@ -92,7 +92,7 @@ def reflect(event):
             ret,frame = cap.read()
             frame = cv2.resize(frame, (720,480))
             edframe = frame
-            cv2.putText(edframe, move, (0,50), cv2.FONT_HERSHEY_SIMPLEX,1.5,(255,255,255), 1, cv2.LINE_AA)
+            cv2.putText(edframe, move, (0,70), cv2.FONT_HERSHEY_SIMPLEX,3,(255,255,255), 1, cv2.LINE_AA)
             cv2.putText(edframe, "quit : press q", (380,460), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255,255,255), 1, cv2.LINE_AA)
             #フレーム画像を表示
             cv2.imshow("frame",edframe)
