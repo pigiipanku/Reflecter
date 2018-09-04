@@ -92,13 +92,14 @@ def reflect(event):
             ret,frame = cap.read()
             frame = cv2.resize(frame, (720,480))
             edframe = frame
-            cv2.putText(edframe, move, (0,50), cv2.FONT_HERSHEY_COMPLEX_SMALL | cv2.FONT_ITALIC,3,(100,200,255),2,cv2.LINE_AA)
+            cv2.putText(edframe, move, (0,50), cv2.FONT_HERSHEY_SIMPLEX,1.5,(255,255,255), 1, cv2.LINE_AA)
+            cv2.putText(edframe, "quit : press q", (380,460), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255,255,255), 1, cv2.LINE_AA)
             #フレーム画像を表示
             cv2.imshow("frame",edframe)
             #retがなかったら終了
             if not ret:
                 print('error')
-                break
+                continue
             #もしqが押されたら、終わり
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
