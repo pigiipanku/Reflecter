@@ -11,8 +11,6 @@ from keras.models import model_from_json
 from keras.utils import to_categorical
 import time
 from concurrent.futures import ThreadPoolExecutor
-running = False
-
 # predict及びmode
 # 0:RIGHT
 # 1:LEFT
@@ -66,94 +64,102 @@ def leftjump():
 
 #reflect
 def reflect(event):
-    running = True
-    print('---START---')
-
-    #10回に一回動くカウントを宣言
-    count = 0
-    #move,modeを初期化
-    move = ''
-    mode = -1
-    #並列化処理
-    pool = ThreadPoolExecutor(4)
-    #VideoCaptureオブジェクトを取得
-    cap = cv2.VideoCapture(0)
-    # モデルの読み込み
-    model = model_from_json(open('9767.json', 'r').read())
-    # 重みの読み込み
-    model.load_weights('9767.h5')
-    #画像認識開始
-    while True:
-        start = time.time()
-         #画像を読み込み
-        ret,frame = cap.read()
-        edframe = frame
-        cv2.putText(edframe, move, (0,50), cv2.FONT_HERSHEY_COMPLEX_SMALL | cv2.FONT_ITALIC,3,(100,200,255),2,cv2.LINE_AA)
-        #フレーム画像を表示
-        cv2.imshow("frame",edframe)
-        #retがなかったら終了
-        if not ret:
-            print('error')
-            break
-        #もしqが押されたら、終わり
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-        #カウントをインクリメント
-        count += 1
-        #カウントが10貯まったら
-        if count == 10:
-            #画像をコピー
-            img = frame.copy()
-            #画像をリサイズ
-            img = cv2.resize(img, (224, 224))
-            #kerasが読み込みやすいようにする。[1,224,224,3]
-            img = image.img_to_array(img)
-            img = img/255
-            img = np.expand_dims(img, axis=0)
-            #モデルをつかって予想　predictは予想の値
-            predicts = model.predict(img)
-            predict = np.argmax(predicts)
-            #実際の動きに変換し、コントローラを動かす
-            #ジャンプ
-            if predict == 4:
-                move = 'JUMP'
-                if mode == 0:
-                    pool.submit(rightjump)
-                elif mode == 1:
-                    pool.submit(leftjump)
+    global c
+    if c == 0:
+        button['image'] = on_imtk
+        c = 1
+    elif c == 1:
+        print('---START---')
+        #10回に一回動くカウントを宣言
+        count = 0
+        #move,modeを初期化
+        move = ''
+        mode = -1
+        #並列化処理
+        pool = ThreadPoolExecutor(4)
+        #VideoCaptureオブジェクトを取得
+        cap = cv2.VideoCapture(0)
+        # モデルの読み込み
+        model = model_from_json(open('9767.json', 'r').read())
+        # 重みの読み込み
+        model.load_weights('9767.h5')
+        #c = 2
+        c = 2
+        #画像認識開始
+        while True:
+            start = time.time()
+             #画像を読み込み
+            ret,frame = cap.read()
+            frame = cv2.resize(frame, (720,480))
+            edframe = frame
+            cv2.putText(edframe, move, (0,50), cv2.FONT_HERSHEY_COMPLEX_SMALL | cv2.FONT_ITALIC,3,(100,200,255),2,cv2.LINE_AA)
+            #フレーム画像を表示
+            cv2.imshow("frame",edframe)
+            #retがなかったら終了
+            if not ret:
+                print('error')
+                break
+            #もしqが押されたら、終わり
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+            #カウントをインクリメント
+            count += 1
+            #カウントが10貯まったら
+            if count == 10:
+                #画像をコピー
+                img = frame.copy()
+                #画像をリサイズ
+                img = cv2.resize(img, (224, 224))
+                #kerasが読み込みやすいようにする。[1,224,224,3]
+                img = image.img_to_array(img)
+                img = img/255
+                img = np.expand_dims(img, axis=0)
+                #モデルをつかって予想　predictは予想の値
+                predicts = model.predict(img)
+                predict = np.argmax(predicts)
+                #実際の動きに変換し、コントローラを動かす
+                #ジャンプ
+                if predict == 4:
+                    move = 'JUMP'
+                    if mode == 0:
+                        pool.submit(rightjump)
+                    elif mode == 1:
+                        pool.submit(leftjump)
+                    else:
+                        pool.submit(jump)
                 else:
-                    pool.submit(jump)
-            else:
-                if predict == 0:
-                    move = 'RIGHT'
-                    pool.submit(right)
-                    mode = 0
-                elif predict == 1:
-                    move = 'LEFT'
-                    pool.submit(left)
-                    mode = 1
-                elif predict == 2:
-                    move = 'SQUAT'
-                    pool.submit(squat)
-                    mode = -1
-                elif predict == 3:
-                    move = 'STOP'
-                    pool.submit(stop)
-                    mode = -1
-                elif predict == 5:
-                    move = 'FIRE'
-                    pool.submit(fire)
-            end = time.time()
-            print(end-start)
-            #カウントを初期化
-            count = 0
+                    if predict == 0:
+                        move = 'RIGHT'
+                        pool.submit(right)
+                        mode = 0
+                    elif predict == 1:
+                        move = 'LEFT'
+                        pool.submit(left)
+                        mode = 1
+                    elif predict == 2:
+                        move = 'SQUAT'
+                        pool.submit(squat)
+                        mode = -1
+                    elif predict == 3:
+                        move = 'STOP'
+                        pool.submit(stop)
+                        mode = -1
+                    elif predict == 5:
+                        move = 'FIRE'
+                        pool.submit(fire)
+                end = time.time()
+                print(end-start)
+                #カウントを初期化
+                count = 0
+        #カメラ、ウィンドウを削除
+        cap.release()
+        cv2.destroyAllWindows()
+        print('---END---')
 
-    #カメラ、ウィンドウを削除
-    cap.release()
-    cv2.destroyAllWindows()
-    print('---END---')
 
 if __name__ == '__main__':
+    global c
+    c = 0
     root = Tk.Tk()
     root.title(u'Reflecter')
 
@@ -170,7 +176,7 @@ if __name__ == '__main__':
     on_imtk = ImageTk.PhotoImage(image=on_im)
 
     # Put it in the display window
-    button = Tk.Button(root, image=on_imtk)
+    button = Tk.Button(root, image=off_imtk)
     button.bind("<Button-1>",reflect)
     button.pack()
 
