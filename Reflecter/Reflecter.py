@@ -20,11 +20,15 @@ from concurrent.futures import ThreadPoolExecutor
 # 5:FIRE
 
 def right():
-    pg.keyDown('d')
+    for i in range(4):
+        pg.keyDown('d')
+    pg.keyUp('d')
     print('RIGHT')
 
 def left():
-    pg.keyDown('a')
+    for i in range(4):
+        pg.keyDown('a')
+    pg.keyUp('a')
     print('LEFT')
 
 def squat():
@@ -41,7 +45,12 @@ def stop():
 def jump():
     for i in range(15):
         pg.keyDown('w')
+        if i < 3:
+            pg.keyDown('d')
+        else:
+            pg.keyUp('d')
     pg.keyUp('w')
+    pg.keyUp('d')
     print('JUMP')
 
 def fire():
@@ -80,9 +89,9 @@ def reflect(event):
         #VideoCaptureオブジェクトを取得
         cap = cv2.VideoCapture(0)
         # モデルの読み込み
-        model = model_from_json(open('9267r.json', 'r').read())
+        model = model_from_json(open('9767.json', 'r').read())
         # 重みの読み込み
-        model.load_weights('9267r.h5')
+        model.load_weights('9767.h5')
         #c = 2
         c = 2
         #画像認識開始
@@ -92,7 +101,7 @@ def reflect(event):
             ret,frame = cap.read()
             frame = cv2.resize(frame, (720,480))
             edframe = frame
-            cv2.putText(edframe, move, (0,70), cv2.FONT_HERSHEY_SIMPLEX,3,(255,255,255), 1, cv2.LINE_AA)
+            cv2.putText(edframe, move, (0,50), cv2.FONT_HERSHEY_COMPLEX_SMALL | cv2.FONT_ITALIC,3,(100,200,255),2,cv2.LINE_AA)
             cv2.putText(edframe, "quit : press q", (380,460), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255,255,255), 1, cv2.LINE_AA)
             #フレーム画像を表示
             cv2.imshow("frame",edframe)
@@ -119,35 +128,28 @@ def reflect(event):
                 predicts = model.predict(img)
                 predict = np.argmax(predicts)
                 #実際の動きに変換し、コントローラを動かす
-                #ジャンプ
+                if predict == 0:
+                    move = 'RIGHT'
+                    pool.submit(right)
+                    mode = 0
+                elif predict == 1:
+                    move = 'LEFT'
+                    pool.submit(left)
+                    mode = 1
+                elif predict == 2:
+                    move = 'SQUAT'
+                    pool.submit(squat)
+                    mode = -1
+                elif predict == 3:
+                    move = 'STOP'
+                    pool.submit(stop)
+                    mode = -1
                 if predict == 4:
                     move = 'JUMP'
-                    if mode == 0:
-                        pool.submit(rightjump)
-                    elif mode == 1:
-                        pool.submit(leftjump)
-                    else:
-                        pool.submit(jump)
-                else:
-                    if predict == 0:
-                        move = 'RIGHT'
-                        pool.submit(right)
-                        mode = 0
-                    elif predict == 1:
-                        move = 'LEFT'
-                        pool.submit(left)
-                        mode = 1
-                    elif predict == 2:
-                        move = 'SQUAT'
-                        pool.submit(squat)
-                        mode = -1
-                    elif predict == 3:
-                        move = 'STOP'
-                        pool.submit(stop)
-                        mode = -1
-                    elif predict == 5:
-                        move = 'FIRE'
-                        pool.submit(fire)
+                    pool.submit(jump)
+                elif predict == 5:
+                    move = 'FIRE'
+                    pool.submit(fire)
                 end = time.time()
                 print(end-start)
                 #カウントを初期化
